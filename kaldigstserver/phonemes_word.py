@@ -114,17 +114,17 @@ __phones2word_server = os.getenv(__env_name)
 
 def phones2word_service(ph_str):
     if not __phones2word_server:
-        logging.warning(f"No env {__env_name}")
+        logging.warning("No env %s", __env_name)
     else:
         headers = {'Content-Type': 'application/json; charset=utf-8'}
         data = {'phones': ph_str}
         try:
-            logging.debug(f"Call phones2word_server, url: {__phones2word_server}")
+            logging.debug("Call phones2word_server, url: %s", __phones2word_server)
             r = requests.get(__phones2word_server, headers=headers, json=data, timeout=10)
             r.raise_for_status()
             parsed_response = json.loads(r.text)
             return parsed_response['word']
         except Exception as e:
-            logging.error(f"Phones2word service error: {str(e)}")
+            logging.error("Phones2word service error: %s", str(e))
 
     return phones2word_rules_backoff(ph_str)

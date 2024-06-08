@@ -219,7 +219,7 @@ class ServerWebsocket(WebSocketClient):
                         if changed:
                             hyp['transcript'] = transcript
                     except Exception as e:
-                        logger.error(f"error {e}")
+                        logger.error("error %s" % str(e))
 
                 logger.debug(u"%s: Before postprocessing: %s" % (self.request_id, repr(full_result).decode("unicode-escape")))
                 full_result = yield self.post_process_full(full_result)
