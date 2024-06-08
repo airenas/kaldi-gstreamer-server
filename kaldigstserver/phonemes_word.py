@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def change_phonemes(hyp):
+    logger.debug("Call change_phonemes: %s", hyp)
     wr_al = hyp.get('word-alignment', -1)
     ph_al = hyp.get('phone-alignment', -1)
     if wr_al != -1 and ph_al != -1:
@@ -111,20 +112,21 @@ def phones2word_rules_backoff(ph_str):
 __env_name = 'PHONES2WORD_SERVER_URL'
 __phones2word_server = os.getenv(__env_name)
 
+if not __phones2word_server:
+    logger.warning("No env %s", __env_name)
+
 
 def phones2word_service(ph_str):
-    if not __phones2word_server:
-        logging.warning("No env %s", __env_name)
-    else:
+    if __phones2word_server:
         headers = {'Content-Type': 'application/json; charset=utf-8'}
         data = {'phones': ph_str}
         try:
-            logging.debug("Call phones2word_server, url: %s", __phones2word_server)
+            logger.debug("Call phones2word_server, url: %s", __phones2word_server)
             r = requests.get(__phones2word_server, headers=headers, json=data, timeout=10)
             r.raise_for_status()
             parsed_response = json.loads(r.text)
             return parsed_response['word']
         except Exception as e:
-            logging.error("Phones2word service error: %s", str(e))
+            logger.error("Phones2word service error: %s", str(e))
 
     return phones2word_rules_backoff(ph_str)
