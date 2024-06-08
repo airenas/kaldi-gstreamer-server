@@ -18,7 +18,7 @@ import zlib
 import base64
 import time
 
-import tornado.gen 
+import tornado.gen
 import tornado.process
 import tornado.ioloop
 import tornado.locks
@@ -29,6 +29,7 @@ from decoder import DecoderPipeline
 from decoder2 import DecoderPipeline2
 
 import common
+from phonemes_word import change_phonemes
 
 logger = logging.getLogger(__name__)
 
@@ -209,6 +210,17 @@ class ServerWebsocket(WebSocketClient):
             full_result['segment'] = self.num_segments
             full_result['id'] = self.request_id
             if full_result.get("status", -1) == common.STATUS_SUCCESS:
+
+                hypotheses = full_result['result'].get('hypotheses', -1)
+                for hyp in hypotheses:
+                    # G.R. Replacing <unk>, _N_, _A_ by phone sequences
+                    try:
+                        transcript, changed = change_phonemes(hyp)
+                        if changed:
+                            hyp['transcript'] = transcript
+                    except Exception as e:
+                        logger.error(f"error {e}")
+
                 logger.debug(u"%s: Before postprocessing: %s" % (self.request_id, repr(full_result).decode("unicode-escape")))
                 full_result = yield self.post_process_full(full_result)
                 logger.info("%s: Postprocessing done." % self.request_id)
