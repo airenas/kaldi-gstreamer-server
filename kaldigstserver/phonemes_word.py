@@ -61,6 +61,8 @@ def change_phonemes(hyp):
                     # phones2letters2 calls service
                     wr_entry['word'] = phones2word_service(ph_str)
         return " ".join(wr_entry['word'] for wr_entry in wr_al), True
+
+    logger.debug("Np change")
     return None, False
 
 
@@ -112,11 +114,10 @@ def phones2word_rules_backoff(ph_str):
 __env_name = 'PHONES2WORD_SERVER_URL'
 __phones2word_server = os.getenv(__env_name)
 
-if not __phones2word_server:
-    logger.warning("No env %s", __env_name)
-
 
 def phones2word_service(ph_str):
+    if not __phones2word_server:
+        logger.warning("No env %s", __env_name)
     if __phones2word_server:
         headers = {'Content-Type': 'application/json; charset=utf-8'}
         data = {'phones': ph_str}
