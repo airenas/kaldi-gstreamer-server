@@ -62,7 +62,7 @@ def change_phonemes(hyp):
                     wr_entry['word'] = phones2word_service(ph_str)
         return " ".join(wr_entry['word'] for wr_entry in wr_al), True
 
-    logger.debug("Np change")
+    logger.debug("No change")
     return None, False
 
 
