@@ -20,45 +20,54 @@ qcu = "\xe2\x80\x9c".decode("utf-8")
 
 logger = logging.getLogger(__name__)
 
-
 def change_phonemes(hyp):
     logger.debug("Call change_phonemes: %s", hyp)
     wr_al = hyp.get('word-alignment', -1)
     ph_al = hyp.get('phone-alignment', -1)
     if wr_al != -1 and ph_al != -1:
-        # print 'AAA'
         ph_last_inx = 0
         for wr_entry in wr_al:
             if re.search(r'^_[A-Z]+_$|^<unk>$', wr_entry['word']):
                 wr_beg = wr_entry['start']
                 wr_end = wr_entry['start'] + wr_entry['length']
-                ph_beg_inx = -1
+                ph_beg_inx = ph_last_inx
                 ph_end_inx = -1
-                # print str(wr_beg) + ' ' + str(wr_end)
+                # print 'wr_beg='+str(wr_beg) + ' wr_end=' + str(wr_end)
                 # print 'ph_last_inx = '+str(ph_last_inx)
                 i = ph_last_inx
                 while i < len(ph_al):
                     ph_beg = ph_al[i]['start']
                     ph_end = ph_al[i]['start'] + ph_al[i]['length']
-                    # print ' P' + str(ph_beg) + ' ' + str(ph_end)
-                    if ph_beg == wr_beg:
+                    # print 'P[ ' + str(i) + ' ] ' + ph_al[i]['phone'] + ' ' + str(ph_beg) + ' ' + str(ph_end)
+                    if ph_beg <= wr_beg:
                         ph_beg_inx = i  # [
                     elif ph_end >= wr_end:
                         ph_end_inx = i  # ]
                         break
                     i += 1
                 ph_last_inx = i
+                # print 'ph_beg_inx = '+str(ph_beg_inx) + ' ph_end_inx = '+str(ph_end_inx) + ' ph_last_inx = '+str(ph_last_inx)
                 if ph_beg_inx > 0 and ph_end_inx > 0:  # phone sequence that matches the word was found
+                    # the first phone is not '_B' terminated
+                    if re.search(r'_B$', ph_al[ph_beg_inx]['phone']) == None:
+                        for j in range(ph_beg_inx+1, ph_end_inx+1):
+                            if re.search(r'_B$', ph_al[j]['phone']) != None:
+                                ph_beg_inx = j
+                                break
                     # the last phone isnot '_E' terminated
                     if re.search(r'_E$', ph_al[ph_end_inx]['phone']) == None:
                         if (ph_end_inx > ph_beg_inx and re.search(r'_E$', ph_al[ph_end_inx - 1]['phone']) != None):
                             ph_end_inx -= 1
+                            ph_last_inx -= 1
                         if (ph_end_inx + 1 < len(ph_al) and re.search(r'_E$', ph_al[ph_end_inx + 1]['phone']) != None):
                             ph_end_inx += 1
+                            ph_last_inx += 1
                     ph_str = " ".join(ph_entry['phone'] for ph_entry in ph_al[ph_beg_inx:ph_end_inx + 1])
                     ph_str = re.sub(r'_[BESI]{1,2}(?= |$)', '', ph_str)  # delete _I, _B
+                    ph_str = re.sub(r' sil|sil ', '', ph_str)            # delete sil
 
                     # phones2letters2 calls service
+                    # print(ph_str + "\n")
                     wr_entry['word'] = phones2word_service(ph_str)
         return " ".join(wr_entry['word'] for wr_entry in wr_al), True
 
