@@ -47,7 +47,7 @@ def change_phonemes(hyp):
                     i += 1
                 ph_last_inx = i
                 # print 'ph_beg_inx = '+str(ph_beg_inx) + ' ph_end_inx = '+str(ph_end_inx) + ' ph_last_inx = '+str(ph_last_inx)
-                if ph_beg_inx > 0 and ph_end_inx > 0:  # phone sequence that matches the word was found
+                if ph_beg_inx >= 0 and ph_end_inx >= 0:  # phone sequence that matches the word was found
                     # the first phone is not '_B' terminated
                     if re.search(r'_B$', ph_al[ph_beg_inx]['phone']) == None:
                         for j in range(ph_beg_inx+1, ph_end_inx+1):
